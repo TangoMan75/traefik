@@ -1,0 +1,27 @@
+# https://computerz.solutions/docker-compose-traefik-nextcloud/
+# https://computerz.solutions/docker-compose-wordpress-nginx-et-traefik/
+version: "3.8"
+
+services:
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./logs:/var/log/traefik
+      - ./config/dynamic:/dynamic:ro
+      - ./config/acme.json:/acme.json
+    networks:
+      - tango
+
+networks:
+  tango:
+    external: true

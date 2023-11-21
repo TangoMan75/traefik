@@ -1,0 +1,6 @@
+/config/acme.json
+/config/dynamic/*
+!/config/dynamic/.gitignore
+/config/traefik.yml
+/docker-compose.yaml
+/logs/*
