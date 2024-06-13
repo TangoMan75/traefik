@@ -1,0 +1,39 @@
+---
+
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    init: true
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./config/acme.json:/etc/traefik/acme.json
+      - ./config/dynamic:/etc/traefik/dynamic:ro
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./logs:/var/log/traefik
+    networks:
+      - traefik
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik-redirect.entrypoints: web
+      traefik.http.routers.traefik-redirect.rule: HostRegexp(`^traefik\.(.+)`)
+      traefik.http.routers.traefik-redirect.middlewares: redirect-https@file
+      traefik.http.routers.traefik-dashboard.entrypoints: websecure
+      traefik.http.routers.traefik-dashboard.middlewares: >
+        security@file,
+        compression@file,
+        auth@file
+      traefik.http.routers.traefik-dashboard.rule: HostRegexp(`^traefik\.(.+)`)
+      traefik.http.routers.traefik-dashboard.service: api@internal
+      traefik.http.routers.traefik-dashboard.tls: true
+
+networks:
+  traefik:
+    external: true
