@@ -1,0 +1,2 @@
+#!/bin/bash
+complete -W "up set_env requirements uninstall open clear backup restore password letsencrypt acme email certs remove_certs network remove_network build start stop lint lint_yaml lint_shell self_install self_uninstall generate_doc help --env --network --user --password --email " "traefik"
