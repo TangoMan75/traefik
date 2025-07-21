@@ -30,7 +30,7 @@ Local Traefik api endpoint will be available here: [http://traefik.localhost/api
 🚀 Installation
 ---------------
 
-### Simply enter following command in your terminal
+### 1. Enter following command in your terminal
 
 ```bash
 # build and run with `dev` settings
@@ -39,6 +39,22 @@ make up
 # build and run with `prod` configuration
 make up env=prod
 ```
+
+### 2. Choose username
+
+> Choose dashboard username (eg: root):
+
+### 3. Choose password
+
+> Choose dashboard password (eg: toor):
+
+### 4. Enter let's encrypt email
+
+> Enter let's encrypt email (eg: admin@yopmail.com):
+
+### 5. Enter traefik network name
+
+> Enter traefik network name : [traefik]
 
 💻 Dependencies
 ---------------
@@ -181,7 +197,7 @@ sudo chmod +x /usr/bin/yq
 Run `make` to print help
 
 ```bash
-make [command] 
+make [command]
 ```
 
 🤖 entrypoint

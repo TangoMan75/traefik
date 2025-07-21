@@ -296,7 +296,7 @@ password() {
     if [ -z "${user}" ]; then
         USER_PROMPT=''
         while [ -z "${USER_PROMPT}" ]; do
-            echo_success 'Enter username (eg: root): '
+            echo_success 'Choose dashboard username (eg: root): '
             read -r USER_PROMPT
         done
         user="${USER_PROMPT}"
@@ -305,7 +305,7 @@ password() {
     if [ -z "${password}" ]; then
         USER_PROMPT=''
         while [ -z "${USER_PROMPT}" ]; do
-            echo_success 'Enter password (eg: toor): '
+            echo_success 'Choose dashboard password (eg: toor): '
             read -r USER_PROMPT
         done
         password="${USER_PROMPT}"
@@ -348,7 +348,7 @@ email() {
     if [ -z "${email}" ]; then
         USER_PROMPT=''
         while [ -z "${USER_PROMPT}" ]; do
-            echo_success 'Enter admin email (eg: admin@yopmail.com): '
+            echo_success "Enter let's encrypt email (eg: admin@yopmail.com): "
             read -r USER_PROMPT
         done
     fi
@@ -434,7 +434,7 @@ remove_certs() {
 ## Create network
 network() {
     if [ -z "${network}" ]; then
-        echo_success 'Enter network name : [traefik] '
+        echo_success 'Enter traefik network name : [traefik] '
         USER_PROMPT=''
         read -r USER_PROMPT
         if [ -z "${USER_PROMPT}" ]; then
