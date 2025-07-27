@@ -3,7 +3,7 @@
 name: ShellCheck CI
 'on':
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
   # Allows you to run this workflow manually from the Actions tab

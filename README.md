@@ -62,131 +62,12 @@ make up env=prod
 **TangoMan Traefik** requires the following dependencies:
 
 - apache2-utils
-- Docker
-- Docker compose plugin
-- yq
+- docker : http://docs.docker.com/engine/install
+- docker-compose : https://docs.docker.com/compose/install/linux
+- yq : https://mikefarah.gitbook.io/yq/v3.x
 - Make (optional)
-- mkcert (dev)
-- yamllint (dev)
-
----
-
-### 🖥 apache2-utils
-
-### 🐧 Install apache2-utils (Linux)
-
-On linux machine enter following command
-
-```bash
-sudo apt-get install --assume-yes apache2-utils
-```
-
----
-
-### 🐋 Docker
-
-#### 🐧 Install Docker (Linux)
-
-On linux machine enter following command
-
-```bash
-sudo apt-get install --assume-yes docker.io
-```
-
-#### 🔧 Configure Docker (Linux)
-
-Add current user to docker group
-
-```bash
-sudo usermod -a -G docker ${USER}
-```
-
-> You will need to log out and log back in current user to use docker
-
-> If your group membership is not properly re-evaluated, enter following command
-
-```bash
-newgrp docker
-```
-
-#### 🏁 Install Docker (Windows)
-
-Download docker community edition installer from docker hub:
-
-- [https://hub.docker.com/editions/community/docker-ce-desktop-windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
-
-#### 🍎 Install Docker (OSX)
-
-Download docker community edition installer from docker hub:
-
-- [https://hub.docker.com/editions/community/docker-ce-desktop-mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
-
----
-
-### 🐳 Docker Compose
-
-#### 🐧 Install Docker Compose (Linux)
-
-On linux machine you will need curl to install docker-compose with the following commands
-
-```bash
-sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-`uname -s`-`uname -m`" -o /usr/bin/docker-compose
-sudo chmod uga+x /usr/bin/docker-compose
-mkdir -p ~/.docker/cli-plugins/
-ln -s /usr/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-sync
-```
-
----
-
-### 🛠 Make
-
-#### 🐧 Install Make (Linux)
-
-On linux machine enter following command
-
-```bash
-sudo apt-get install --assume-yes make
-```
-
-#### 🏁 Install Make (Windows)
-
-On windows machine you will need to install [cygwin](http://www.cygwin.com/) or [GnuWin make](http://gnuwin32.sourceforge.net/packages/make.htm) first to execute make script.
-
-#### 🍎 Install Make (OSX)
-
-Make should be available by default on OSX system, but you can upgrade make version with following command
-
-```bash
-brew install make
-```
-
----
-
-### 🧽 yamllint
-
-### 🐧 Install yamllint (Linux)
-
-On linux machine enter following command
-
-```bash
-sudo apt-get install --assume-yes yamllint
-```
-
----
-
-### 🖥 yq
-
-### 🐧 Install yq (Linux)
-
-On linux machine enter following command
-
-```bash
-sudo wget -nv https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-sudo chmod +x /usr/bin/yq
-```
-
----
+- mkcert (dev) : https://github.com/FiloSottile/mkcert
+- yamllint (dev) : https://yamllint.readthedocs.io
 
 🔥 Usage
 --------
@@ -204,6 +85,27 @@ make [command]
 -------------
 
 [See entrypoint.sh documentation](entrypoint.md)
+
+🐞 Troubleshoot
+---------------
+
+If you encounter issues, try these steps:
+
+- Run `make logs` to check container logs for errors.
+- For permission problems, use `sudo` or adjust your user permissions.
+
+If you see this error:
+
+```
+2025-07-22T15:51:07Z ERR Error while starting server error="accept tcp [::]:443: use of closed network connection" entryPointName=websecure
+```
+
+🚫 Traefik failed to start on port 443 (HTTPS) for the `websecure` entry point.
+
+**Possible Causes:**
+
+- **Port 443 is already in use:** Another process may be using port 443. Check with `sudo lsof -i :443` or `netstat -tulpn | grep :443`.
+- **Insufficient permissions:** Listening on ports below 1024 (like 443) often requires root privileges. Try running `sudo make start`.
 
 🤝 Contributing
 ---------------
