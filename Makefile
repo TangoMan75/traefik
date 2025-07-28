@@ -6,7 +6,7 @@
 # * @license  MIT
 # */
 
-.PHONY: help up open shell clear build start stop status restart acme network
+.PHONY: acme build clear help logs network open restart shell start status stop up
 
 #--------------------------------------------------
 # Parameters
@@ -138,16 +138,24 @@ uninstall:
 	@sh entrypoint.sh self_uninstall
 
 ##############################################
+### App
+##############################################
+
+## Show logs
+logs:
+	@sh entrypoint.sh logs
+
+## Clear logs
+clear:
+	@sh entrypoint.sh clear
+
+##############################################
 ### Local
 ##############################################
 
 ## Open traefik dashboard in default browser
 open:
 	@sh entrypoint.sh open
-
-## Clear logs
-clear:
-	@sh entrypoint.sh clear
 
 ##############################################
 ### Security

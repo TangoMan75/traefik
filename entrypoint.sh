@@ -134,8 +134,8 @@ requirements() {
         _error=1
     fi
 
-    if [ -z "$(docker compose -v)" ]; then
-        echo_error "\"$(basename "${0}")\" requires docker compose plugin\n"
+    if [ ! "$(docker compose >/dev/null 2>&1)" ] && [ ! -x "$(command -v docker-compose)" ]; then
+        echo_error "\"$(basename "${0}")\" requires docker-compose or docker compose plugin\n"
         _error=1
     fi
 
@@ -210,30 +210,13 @@ uninstall() {
 }
 
 ##############################################
-### Local
+### App
 ##############################################
 
-## Open traefik and whoami dashboard in default browser
-open() {
-
-    if [ ! -f .env ]; then
-        echo_error "\".env\" file not found\n"
-        return 1
-    fi
-
-    # shellcheck disable=SC1090
-    . "$(realpath .env)"
-
-    for domain in ${DOMAINS}; do
-        echo_info "nohup xdg-open \"http://${domain}.localhost\" >/dev/null 2>&1\n"
-        nohup xdg-open "http://${domain}.localhost" >/dev/null 2>&1
-
-        echo_info "nohup xdg-open \"https://${domain}.localhost\" >/dev/null 2>&1\n"
-        nohup xdg-open "https://${domain}.localhost" >/dev/null 2>&1
-    done
-
-    echo_info 'nohup xdg-open http://traefik.localhost/api/rawdata >/dev/null 2>&1\n'
-    nohup xdg-open http://traefik.localhost/api/rawdata >/dev/null 2>&1
+## Show traefik error log
+logs() {
+    echo_info 'docker exec -it traefik tail -n 50 -f /var/log/traefik/error.log\n'
+    docker exec -it traefik tail -n 50 -f /var/log/traefik/error.log
 }
 
 ## Clear logs
@@ -275,6 +258,33 @@ restore() {
 
     echo_info 'cp ~/.TangoMan75/traefik/traefik.yaml ./ || true\n'
     cp ~/.TangoMan75/traefik/traefik.yaml ./ || true
+}
+
+##############################################
+### Local
+##############################################
+
+## Open traefik and whoami dashboard in default browser
+open() {
+
+    if [ ! -f .env ]; then
+        echo_error "\".env\" file not found\n"
+        return 1
+    fi
+
+    # shellcheck disable=SC1090
+    . "$(realpath .env)"
+
+    for domain in ${DOMAINS}; do
+        echo_info "nohup xdg-open \"http://${domain}.localhost\" >/dev/null 2>&1\n"
+        nohup xdg-open "http://${domain}.localhost" >/dev/null 2>&1
+
+        echo_info "nohup xdg-open \"https://${domain}.localhost\" >/dev/null 2>&1\n"
+        nohup xdg-open "https://${domain}.localhost" >/dev/null 2>&1
+    done
+
+    echo_info 'nohup xdg-open http://traefik.localhost/api/rawdata >/dev/null 2>&1\n'
+    nohup xdg-open http://traefik.localhost/api/rawdata >/dev/null 2>&1
 }
 
 ##############################################
@@ -479,20 +489,38 @@ remove_network() {
 
 ## Build docker stack
 build() {
-    echo_info 'docker compose build\n'
-    docker compose build
+    if [ "$(docker compose >/dev/null 2>&1)" ]; then
+        echo_info 'docker compose build\n'
+        docker compose build
+        return 0
+    fi
+
+    echo_info 'docker-compose build\n'
+    docker-compose build
 }
 
 ## Start docker stack
 start() {
-    echo_info 'docker compose up --detach --remove-orphans\n'
-    docker compose up --detach --remove-orphans
+    if [ "$(docker compose >/dev/null 2>&1)" ]; then
+        echo_info 'docker compose up -d --remove-orphans\n'
+        docker compose up -d --remove-orphans
+        return 0
+    fi
+
+    echo_info 'docker-compose up --detach --remove-orphans\n'
+    docker-compose up --detach --remove-orphans
 }
 
 ## Stop docker stack
 stop() {
-    echo_info 'docker compose stop || true\n'
-    docker compose stop || true
+    if [ "$(docker compose >/dev/null 2>&1)" ]; then
+        echo_info 'docker compose stop || true\n'
+        docker compose stop || true
+        return 0
+    fi
+
+    echo_info 'docker-compose stop || true\n'
+    docker-compose stop || true
 }
 
 ##################################################

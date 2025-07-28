@@ -9,7 +9,7 @@ TangoMan Traefik
 
 ## 📑 Description
 
-Awesome **TangoMan Traefik** is a fast and handy tool to manage Traefik with Docker.   
+Awesome **TangoMan Traefik** is a fast and handy tool to manage Traefik with Docker.
 
 ## 🔥 Usage
 
@@ -18,37 +18,35 @@ Awesome **TangoMan Traefik** is a fast and handy tool to manage Traefik with Doc
 ## 🧱 Constants
 
 1. **ALIAS**
-  - Script alias
-  - Value: traefik
-
-## 🚩 Flags
+> Script alias
+  - Value: _traefik_
 
 ## ⚙️ Options
 
-1. **--env**
-  - Description: Environment
-  - Constraint:  /^(dev|prod)$/
-  - Default: dev
+1. **`--env`**
+> Environment 
+  - Constraint: `/^(dev|prod)$/`
+  - Default: _dev_
 
-2. **--network**
-  - Description: Network
-  - Constraint:  /^[a-z0-9_-]+$/
-  - Default: ''
+2. **`--network`**
+> Network 
+  - Constraint: `/^[a-z0-9_-]+$/`
+  - Default: _''_
 
-3. **--user**
-  - Description: User
-  - Constraint:  /^[a-z0-9_-]+$/
-  - Default: ''
+3. **`--user`**
+> User 
+  - Constraint: `/^[a-z0-9_-]+$/`
+  - Default: _''_
 
-4. **--password**
-  - Description: Password
-  - Constraint:  /^.+$/
-  - Default: ''
+4. **`--password`**
+> Password 
+  - Constraint: `/^.+$/`
+  - Default: _''_
 
-5. **--email**
-  - Description: email
-  - Constraint:  /^.+@.+\..+$/
-  - Default: ''
+5. **`--email`**
+> email 
+  - Constraint: `/^.+@.+\..+$/`
+  - Default: _''_
 
 ## 🤖 Commands
 
@@ -66,10 +64,10 @@ Awesome **TangoMan Traefik** is a fast and handy tool to manage Traefik with Doc
 4. **uninstall**
   - Uninstall Traefik
 
-### ⚡ Local
+### ⚡ App
 
-1. **open**
-  - Open traefik and whoami dashboard in default browser
+1. **logs**
+  - Show traefik error log
 
 2. **clear**
   - Clear logs
@@ -79,6 +77,11 @@ Awesome **TangoMan Traefik** is a fast and handy tool to manage Traefik with Doc
 
 4. **restore**
   - Restore traefik configuration
+
+### ⚡ Local
+
+1. **open**
+  - Open traefik and whoami dashboard in default browser
 
 ### ⚡ Security
 
