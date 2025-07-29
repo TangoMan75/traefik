@@ -1,0 +1,49 @@
+---
+
+
+tls:
+  stores:
+    default: {}
+  certificates:
+    - certFile: null
+      keyFile: null
+      stores:
+        - default
+http:
+  middlewares:
+    redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    compression:
+      compress:
+        excludedContentTypes:
+          - text/event-stream
+    # Generate new password with htpasswd
+    # $ sudo apt-get install -y apache2-utils
+    # $ htpasswd -nb user password
+    auth:
+      basicAuth:
+        users: []
+    security:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+        # accessControlAllowOriginList = "*"
+        accessControlMaxAge: 100
+        addVaryHeader: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        frameDeny: true
+        sslRedirect: true
+        sslForceHost: true
+        # stsIncludeSubdomain: true
+        stsPreload: true
+        # ContentSecurityPolicy = "default-src 'self' 'unsafe-inline'"
+        customFrameOptionsValue: SAMEORIGIN
+        referrerPolicy: same-origin
+        featurePolicy: vibrate 'self'
+        stsSeconds: 315360000

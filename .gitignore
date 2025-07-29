@@ -1,0 +1,11 @@
+.env
+/certs/*
+!/certs/.gitignore
+/compose.yaml
+/config/acme.json
+/config/dynamic/*
+!/config/dynamic/.gitignore
+/config/traefik.yaml
+/logs/*
+traefik.md
+traefik-completion.sh
