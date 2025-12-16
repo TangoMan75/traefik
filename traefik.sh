@@ -33,7 +33,7 @@ set -e
 ## TangoMan Traefik: Streamline your Traefik setup with Docker.
 ##
 ## @author  "Matthias Morin" <mat@tangoman.io>
-## @version 0.1.1
+## @version 0.2.1
 ## @license MIT
 ## @link    https://github.com/TangoMan75/traefik
 
@@ -65,10 +65,6 @@ domain=''
 
 #--------------------------------------------------
 # Place your flags after this line
-#--------------------------------------------------
-
-#--------------------------------------------------
-# Place your private constants after this line
 #--------------------------------------------------
 
 #--------------------------------------------------
@@ -271,6 +267,7 @@ uninstall() {
     _echo_info 'rm -f ./config/dynamic/dynamic.yaml\n'
     rm -f ./config/dynamic/dynamic.yaml
 
+    _uninstall "$0"
 }
 
 ##################################################
@@ -374,7 +371,6 @@ restore() {
 ##     "nohup"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
 ##     "_echo_info",
 ##     "_open"
 ##   ]
@@ -503,7 +499,6 @@ acme() {
 ##     "yq"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
 ##     "_echo_info",
 ##     "_echo_success",
 ##     "_get_parameter",
@@ -549,7 +544,7 @@ email() {
 ##   ],
 ##   "depends": [
 ##     "_check_installed",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info",
 ##     "_get_parameter",
 ##     "print_domains"
@@ -600,7 +595,7 @@ certs() {
 ##     "read"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_get_parameter",
 ##     "_set_parameter",
 ##     "certs",
@@ -994,7 +989,7 @@ _ALERT_DANGER='\033[1;41;97m'
 ## bold white text over bright orange background
 _ALERT_WARNING='\033[1;43;97m'
 
-## bold white text over bright blue background
+## bold white text over blue background
 _ALERT_INFO='\033[1;44;97m'
 
 ## Print primary text with optional indentation and padding
@@ -1257,6 +1252,31 @@ _echo_info() {
     printf "%*s${_INFO}%b${_DEFAULT}%*s" "$2" '' "$1" "$3" ''
 }
 
+## Print error message to STDERR, prefixed with "error: "
+##
+## {
+##   "namespace": "colors",
+##   "assumes": [
+##     "_DANGER",
+##     "_DEFAULT"
+##   ],
+##   "parameters": [
+##     {
+##       "position": 1,
+##       "name": "MESSAGE",
+##       "type": "str",
+##       "description": "Error message to display.",
+##       "nullable": false
+##     }
+##   ]
+## }
+_echo_error() {
+    # Synopsis: _echo_error <MESSAGE>
+    #   MESSAGE: Error message to display.
+
+    printf "${_DANGER}error: %b${_DEFAULT}" "$1" >&2
+}
+
 ## Print primary alert
 ##
 ## {
@@ -1407,31 +1427,6 @@ _alert_info()      {
     printf "${_EOL}%b%64s${_EOL}%b %-63s${_EOL}%b%64s${_EOL}\n" "${_ALERT_INFO}" '' "${_ALERT_INFO}" "$1" "${_ALERT_INFO}" ''
 }
 
-## Print error message to STDERR, prefixed with "error: "
-##
-## {
-##   "namespace": "colors",
-##   "assumes": [
-##     "_DANGER",
-##     "_DEFAULT"
-##   ],
-##   "parameters": [
-##     {
-##       "position": 1,
-##       "name": "MESSAGE",
-##       "type": "str",
-##       "description": "Error message to display.",
-##       "nullable": false
-##     }
-##   ]
-## }
-_echo_error() {
-    # Synopsis: _echo_error <MESSAGE>
-    #   MESSAGE: Error message to display.
-
-    printf "${_DANGER}error: %s${_DEFAULT}\n" "$1" >&2
-}
-
 #--------------------------------------------------
 #_ Compatibility
 #--------------------------------------------------
@@ -1488,7 +1483,7 @@ _sed_i() {
 ##   "namespace": "docker",
 ##   "depends": [
 ##     "_get_docker_compose",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -1504,7 +1499,7 @@ _docker_compose_build() {
     # Synopsis: _docker_compose_build [FILE_PATH]
     #   FILE_PATH: (optional) The path to the compose.yaml file.
 
-    if [ $# -gt 1 ]; then _echo_danger "error: _docker_compose_build: too many arguments ($#)\n"; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_docker_compose_build: too many arguments ($#)\n"; return 1; fi
 
     if [ -z "$1" ]; then
         _echo_info "$(_get_docker_compose) build\n"
@@ -1514,7 +1509,7 @@ _docker_compose_build() {
     fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _docker_compose_build: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_docker_compose_build: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "$(_get_docker_compose) --file \"$1\" build\n"
     $(_get_docker_compose) --file "$1" build
@@ -1526,7 +1521,7 @@ _docker_compose_build() {
 ##   "namespace": "docker",
 ##   "depends": [
 ##     "_get_docker_compose",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -1542,7 +1537,7 @@ _docker_compose_start() {
     # Synopsis: _docker_compose_start [FILE_PATH]
     #   FILE_PATH: (optional) The path to the compose.yaml file.
 
-    if [ $# -gt 1 ]; then _echo_danger "error: _docker_compose_start: too many arguments ($#)\n"; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_docker_compose_start: too many arguments ($#)\n"; return 1; fi
 
     if [ -z "$1" ]; then
         _echo_info "$(_get_docker_compose) up --detach --remove-orphans\n"
@@ -1552,7 +1547,7 @@ _docker_compose_start() {
     fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _docker_compose_start: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_docker_compose_start: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "$(_get_docker_compose) --file \"$1\" up --detach --remove-orphans\n"
     $(_get_docker_compose) --file "$1" up --detach --remove-orphans
@@ -1564,7 +1559,7 @@ _docker_compose_start() {
 ##   "namespace": "docker",
 ##   "depends": [
 ##     "_get_docker_compose",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -1580,7 +1575,7 @@ _docker_compose_stop() {
     # Synopsis: _docker_compose_stop [FILE_PATH]
     #   FILE_PATH: (optional) The path to the compose.yaml file.
 
-    if [ $# -gt 1 ]; then _echo_danger "error: _docker_compose_stop: too many arguments ($#)\n"; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_docker_compose_stop: too many arguments ($#)\n"; return 1; fi
 
     if [ -z "$1" ]; then
         _echo_info "$(_get_docker_compose) stop\n"
@@ -1590,7 +1585,7 @@ _docker_compose_stop() {
     fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _docker_compose_stop: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_docker_compose_stop: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "$(_get_docker_compose) --file \"$1\" stop\n"
     $(_get_docker_compose) --file "$1" stop
@@ -1605,7 +1600,7 @@ _docker_compose_stop() {
 ##     "docker"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ]
 ## }
 _get_docker_compose() {
@@ -1623,7 +1618,7 @@ _get_docker_compose() {
         return 0
     fi
 
-    _echo_danger "error: \"$(basename "${0}")\" requires docker-compose or docker compose plugin\n"
+    _echo_error "\"$(basename "${0}")\" requires docker-compose or docker compose plugin\n"
 
     exit 1
 }
@@ -1638,7 +1633,7 @@ _get_docker_compose() {
 ##   "namespace": "help",
 ##   "depends": [
 ##     "_alert_primary",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_get_constants",
 ##     "_get_flags",
 ##     "_get_function_shoedoc",
@@ -1677,11 +1672,11 @@ _help() {
     #   FILE_PATH: The path to the input file.
     #   FUNCTION_NAME: The function name to get help for.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _help: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _help: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_help: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_help: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _help: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_help: \"$1\" file not found\n"; return 1; fi
 
     if [ -z "$2" ]; then
         __padding__=$(_get_padding "$1")
@@ -1729,7 +1724,7 @@ _help() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_warning"
 ##   ],
 ##   "assumes": [
@@ -1760,11 +1755,11 @@ _print_commands() {
     #   PADDING:   (optional) Padding length (default: 12)
     #   note:      "awk: %*x formats are not supported"
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_commands: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _print_commands: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_commands: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_print_commands: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-12}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_commands: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_commands: \"$1\" file not found\n"; return 1; fi
 
     _echo_warning 'Commands:\n'
     awk -v WARNING="${_WARNING}" -v SUCCESS="${_SUCCESS}" -v PRIMARY="${_PRIMARY}" \
@@ -1789,7 +1784,7 @@ _print_commands() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_warning"
 ##   ],
 ##   "assumes": [
@@ -1822,11 +1817,11 @@ _print_constants() {
     #   PADDING:   (optional) Padding length (default: 12)
     #   note:      "awk: %*x formats are not supported"
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_constants: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _print_constants: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_constants: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_print_constants: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-12}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_constants: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_constants: \"$1\" file not found\n"; return 1; fi
 
     _echo_warning 'Constants:\n'
     awk -F '=' -v SUCCESS="${_SUCCESS}" -v PRIMARY="${_PRIMARY}" -v INFO="${_INFO}" -v WARNING="${_WARNING}" -v EOL="${_EOL}" \
@@ -1871,7 +1866,7 @@ _print_description() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_warning"
 ##   ],
 ##   "assumes": [
@@ -1901,11 +1896,11 @@ _print_flags() {
     #   PADDING:   (optional) Padding length (default: 12)
     #   note:      "awk: %*x formats are not supported"
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_flags: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _print_flags: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_flags: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_print_flags: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" $((${2:-12}-2))
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_flags: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_flags: \"$1\" file not found\n"; return 1; fi
 
     _echo_warning 'Flags:\n'
     awk -F '=' -v SUCCESS="${_SUCCESS}" -v PRIMARY="${_PRIMARY}" '/^[a-zA-Z0-9_]+=false$/ {
@@ -1922,7 +1917,7 @@ _print_flags() {
 ##   "depends": [
 ##     "_get_script_shoedoc",
 ##     "_get_shoedoc_tag",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_primary",
 ##     "_echo_success",
 ##     "_echo_warning"
@@ -1941,11 +1936,11 @@ _print_infos() {
     # Synopsis: _print_infos <FILE_PATH>
     #   FILE_PATH: The path to the input file.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_infos: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _print_infos: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_infos: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_print_infos: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_infos: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_infos: \"$1\" file not found\n"; return 1; fi
 
     __annotations__=$(_get_script_shoedoc "$1")
 
@@ -1964,7 +1959,7 @@ _print_infos() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_warning"
 ##   ],
 ##   "assumes": [
@@ -1997,11 +1992,11 @@ _print_options() {
     #   PADDING:   (optional) Padding length (default: 12)
     #   note:      "awk: %*x formats are not supported"
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_options: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _print_options: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_options: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_print_options: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" $((${2:-12}-2))
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_options: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_options: \"$1\" file not found\n"; return 1; fi
 
     _echo_warning "Options:\n"
     awk  -F '=' -v WARNING="${_WARNING}" -v SUCCESS="${_SUCCESS}" -v INFO="${_INFO}" -v DEFAULT="${_DEFAULT}" -v EOL="${_EOL}" \
@@ -2029,7 +2024,7 @@ _print_options() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info",
 ##     "_echo_success",
 ##     "_echo_warning"
@@ -2054,11 +2049,11 @@ _print_usage() {
     # Synopsis: _print_usage <FILE_PATH>
     #   FILE_PATH: The path to the input file.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_usage: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _print_usage: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_usage: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_print_usage: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _print_usage: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_print_usage: \"$1\" file not found\n"; return 1; fi
 
     _echo_warning 'Usage:\n'
     _echo_info "sh $(basename "$1") <" 2; _echo_success 'command'; _echo_info '> '
@@ -2080,7 +2075,7 @@ _print_usage() {
 ## {
 ##   "namespace": "install",
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2105,11 +2100,11 @@ _copy_install() {
     #   ALIAS:     (optional) The alias of the script to install. Defaults to the basename of the provided file
     #   note:      Creates a symbolic link in the /usr/local/bin/ directory.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _copy_install: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _copy_install: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_copy_install: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_copy_install: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _copy_install: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_copy_install: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "sudo cp -a \"$1\" \"/usr/local/bin/$2\"\n"
     sudo cp -a "$1" "/usr/local/bin/$2"
@@ -2121,7 +2116,7 @@ _copy_install() {
 ##   "namespace": "install",
 ##   "depends": [
 ##     "_get_comspec",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2148,11 +2143,11 @@ _generate_autocomplete() {
     #              Refer to https://iridakos.com/programming/2018/03/01/bash-programmable-completion-tutorial for details on how to configure shell autocompletions.
     #              Or read the official docmentation for "complete" https://www.gnu.org/software/bash/manual/html_node/Programmable-Completion-Builtins.html#Programmable-Completion-Builtins
 
-    if [ -z "$1" ]; then _echo_danger 'error: _generate_autocomplete: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _generate_autocomplete: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_generate_autocomplete: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_generate_autocomplete: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _generate_autocomplete: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_generate_autocomplete: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "printf '#!/bin/bash\\\ncomplete -f -d -W \"%s\" \"%s\"' \"$(_get_comspec "$1")\" \"$2\" > \"$(dirname "$1")/$2-completion.sh\"\n"
     printf '#!/bin/bash\ncomplete -f -d -W "%s" "%s"' "$(_get_comspec "$1")" "$2" > "$(dirname "$1")/$2-completion.sh"
@@ -2164,7 +2159,7 @@ _generate_autocomplete() {
 ##   "namespace": "install",
 ##   "depends": [
 ##     "_get_comspec",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2191,11 +2186,11 @@ _generate_global_autocomplete() {
     #              in the /etc/bash_completion.d/ directory, enabling autocompletion for all users on the system.
     #              It uses sudo for file creation in a system directory, requiring root privileges.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _generate_global_autocomplete: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _generate_global_autocomplete: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_generate_global_autocomplete: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_generate_global_autocomplete: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _generate_global_autocomplete: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_generate_global_autocomplete: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "printf '#!/bin/bash\\\ncomplete -W \"%s\" \"%s\"' \"$(_get_comspec "$1")\" \"$2\" | sudo tee \"/etc/bash_completion.d/$2\"\n"
     printf '#!/bin/bash\ncomplete -W "%s" "%s"' "$(_get_comspec "$1")" "$2" | sudo tee "/etc/bash_completion.d/$2"
@@ -2209,7 +2204,7 @@ _generate_global_autocomplete() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2225,11 +2220,11 @@ _get_comspec() {
     # Synopsis: _get_comspec <FILE_PATH>
     #   FILE_PATH: The path to the input file.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_comspec: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_comspec: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_comspec: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_comspec: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_comspec: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_comspec: \"$1\" file not found\n"; return 1; fi
 
     awk '/^(function *)?[a-zA-Z0-9_]+ *\(\) *\{/ {
         sub("^function ",""); gsub("[ ()]","");
@@ -2257,7 +2252,7 @@ _get_comspec() {
 ##     "_is_installed",
 ##     "_set_completion_autoload",
 ##     "_symlink_install",
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2288,11 +2283,11 @@ _install() {
     #   ALIAS:     (optional) The alias of the script to install. Defaults to the basename of the provided script.
     #   GLOBAL:    (optional) Install globally. Defaults to "false".
 
-    if [ -z "$1" ]; then _echo_danger 'error: _install: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 3 ]; then _echo_danger "error: _install: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_install: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 3 ]; then _echo_error "_install: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}" "${3:-false}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _install: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_install: \"$1\" file not found\n"; return 1; fi
 
     if [ "$3" = true ]; then
         _copy_install "$1" "$2"
@@ -2326,7 +2321,7 @@ _install() {
 ##   "namespace": "install",
 ##   "depends": [
 ##     "_sed_i",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2351,11 +2346,11 @@ _remove_completion_autoload() {
     #   SHELL_CONFIG_FILE: The path to the shell configuration file to update (e.g., ~/.bashrc, ~/.zshrc).
     #   ALIAS:             (optional) The alias of the script to remove. Defaults to the basename of the provided file
 
-    if [ $# -lt 1 ]; then _echo_danger 'error: _remove_completion_autoload: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _remove_completion_autoload: too many arguments ($#)\n"; return 1; fi
+    if [ $# -lt 1 ]; then _echo_error '_remove_completion_autoload: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_remove_completion_autoload: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _remove_completion_autoload: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_remove_completion_autoload: \"$1\" file not found\n"; return 1; fi
 
     _echo_info "$(_sed_i) \"/^###> $2$/,/^###< $2$/d\" \"$1\"\n"
     $(_sed_i) "/^###> $2$/,/^###< $2$/d" "$1"
@@ -2373,7 +2368,7 @@ _remove_completion_autoload() {
 ##   "depends": [
 ##     "_collapse_blank_lines",
 ##     "_sed_i",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2405,12 +2400,12 @@ _set_completion_autoload() {
     #   SCRIPT_FILE_PATH:       The path to the input file.
     #   ALIAS:                  (optional) The alias of the input script. Defaults to the basename of the provided file
 
-    if [ -z "$1" ]  || [ -z "$2" ]; then _echo_danger 'error: _set_completion_autoload: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 3 ]; then _echo_danger "error: _set_completion_autoload: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]  || [ -z "$2" ]; then _echo_error '_set_completion_autoload: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 3 ]; then _echo_error "_set_completion_autoload: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$(realpath "$2")" "${3:-"$(basename "$2" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _set_completion_autoload: \"$1\" file not found\n"; return 1; fi
-    if [ ! -f "$2" ]; then _echo_danger "error: _set_completion_autoload: \"$2\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_set_completion_autoload: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$2" ]; then _echo_error "_set_completion_autoload: \"$2\" file not found\n"; return 1; fi
 
     # declare inner function
     __set_completion_autoload() {
@@ -2440,7 +2435,7 @@ _set_completion_autoload() {
 ## {
 ##   "namespace": "install",
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2465,11 +2460,11 @@ _symlink_install(){
     #   ALIAS:     (optional) The alias of the script to install. Defaults to the basename of the provided file
     #   note:      Creates a symbolic link in the /usr/local/bin/ directory.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _symlink_install some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _symlink_install too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_symlink_install some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_symlink_install too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _symlink_install \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_symlink_install \"$1\" file not found\n"; return 1; fi
 
     _echo_info "sudo ln -s \"$1\" \"/usr/local/bin/$2\"\n"
     sudo ln -s "$1" "/usr/local/bin/$2"
@@ -2481,7 +2476,7 @@ _symlink_install(){
 ##   "namespace": "install",
 ##   "depends": [
 ##     "_remove_completion_autoload",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2505,11 +2500,11 @@ _uninstall() {
     #   FILE_PATH: The path to the input file.
     #   ALIAS:     (optional) The alias of the script to uninstall. Defaults to the basename of the provided script.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _uninstall: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _uninstall: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_uninstall: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_uninstall: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-"$(basename "$1" .sh)"}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _uninstall: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_uninstall: \"$1\" file not found\n"; return 1; fi
 
     _remove_completion_autoload ~/.zshrc "$2"
     _remove_completion_autoload ~/.bashrc "$2"
@@ -2583,7 +2578,7 @@ _yes_no() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2607,11 +2602,11 @@ _get_constants() {
     #   SCRIPT_PATH: The path to the input script.
     #   GET_PRIVATE: (Optional) If set to 'true', retrieves private constants as well. (default=false)
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_constants: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_constants: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_constants: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_constants: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-false}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_constants: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_constants: \"$1\" file not found\n"; return 1; fi
 
     awk -F '=' -v GET_PRIVATE="$2" \
     '/^[A-Z0-9_]+=.+$/ {
@@ -2631,7 +2626,7 @@ _get_constants() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2655,11 +2650,11 @@ _get_constraint() {
     #   SCRIPT_PATH:   The path to the input script.
     #   VARIABLE_NAME: The variable to validate.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _get_constraint: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_constraint: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_get_constraint: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_constraint: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_constraint: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_constraint: \"$1\" file not found\n"; return 1; fi
 
     awk -F '=' -v NAME="$2" \
     '/^## /{if (annotation=="") annotation=substr($0,4)}
@@ -2678,7 +2673,7 @@ _get_constraint() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2694,11 +2689,11 @@ _get_flags() {
     # Synopsis: _get_flags <SCRIPT_PATH>
     #   SCRIPT_PATH: The path to the input script.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_flags: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_flags: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_flags: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_flags: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_flags: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_flags: \"$1\" file not found\n"; return 1; fi
 
     awk -F '=' '/^[a-zA-Z0-9_]+=false$/ {
         if (substr(PREV,1,3) == "## " && $1 != toupper($1) && substr($0,1,1) != "_") print $1
@@ -2713,7 +2708,7 @@ _get_flags() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2737,11 +2732,11 @@ _get_function() {
     #   SCRIPT_PATH:   The path to the input file.
     #   FUNCTION_NAME: The name of the function to retrieve.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _get_function: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_function: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_get_function: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_function: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_function: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_function: \"$1\" file not found\n"; return 1; fi
 
     awk -v FUNCTION_NAME="$2" '
     function count_occurrences(str,char) {
@@ -2779,7 +2774,7 @@ _get_function() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2803,11 +2798,11 @@ _get_functions_names() {
     #   SCRIPT_PATH: The path to the input script.
     #   GET_PRIVATE: (Optional) If set to 'true', retrieves private functions as well. Defaults to "false".
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_functions_names: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_functions_names: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_functions_names: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_functions_names: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-false}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_functions_names: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_functions_names: \"$1\" file not found\n"; return 1; fi
 
     # this regular expression matches functions with either bash or sh syntax
     awk -v GET_PRIVATE="$2" \
@@ -2831,7 +2826,7 @@ _get_functions_names() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2855,11 +2850,11 @@ _get_options() {
     #   SCRIPT_PATH:      The path to the input script.
     #   GET_PRIVATE_ONLY: (Optional) If set to 'true', retrieves private options only. Defaults to "false".
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_options: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_options: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_options: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_options: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "${2:-false}"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_options: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_options: \"$1\" file not found\n"; return 1; fi
 
     awk -F '=' -v GET_PRIVATE_ONLY="$2" \
     '/^[a-zA-Z0-9_]+=.+$/ {
@@ -2879,7 +2874,7 @@ _get_options() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2895,11 +2890,11 @@ _get_padding() {
     # Synopsis: _get_padding <SCRIPT_PATH>
     #   SCRIPT_PATH: The path to the input script.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_padding: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_padding: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_padding: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_padding: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_padding: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_padding: \"$1\" file not found\n"; return 1; fi
 
     awk -F '=' '
         /^[a-zA-Z0-9_]+=.+$/ { MATCH=$1 }       # matches constants, options and flags
@@ -2920,7 +2915,7 @@ _get_padding() {
 ##     "sed"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -2945,11 +2940,11 @@ _get_parameter() {
     #   FILE_PATH: The path to the input file.
     #   KEY:       The variable name to get from provided file.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _get_parameter: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_parameter: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_get_parameter: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_parameter: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_parameter: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_parameter: \"$1\" file not found\n"; return 1; fi
 
     sed -n "s/^$2=\(.*\)/\1/p" "$1" | sed 's/^"//; s/"$//' # remove leading and trailing quotes
 }
@@ -2962,7 +2957,7 @@ _get_parameter() {
 ##     "jq"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -2986,9 +2981,9 @@ _print_synopsis() {
     #   JSON: The input string containing raw JSON.
     #   MARKDOWN_FORMAT: (Optional) If set to 'true', returns result as markdown. Defaults to "false".
 
-    if [ -z "$1" ]; then _echo_danger 'error: _print_synopsis: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _print_synopsis: too many arguments ($#)\n"; return 1; fi
-    if ! printf '%s' "$1" | jq empty >/dev/null 2>&1; then _echo_danger "error: _print_synopsis: invalid JSON input\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_print_synopsis: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_print_synopsis: too many arguments ($#)\n"; return 1; fi
+    if ! printf '%s' "$1" | jq empty >/dev/null 2>&1; then _echo_error "_print_synopsis: invalid JSON input\n"; return 1; fi
 
     if [ "${2:-false}" = "true" ]; then
         printf '> Synopsis:\n> '
@@ -3030,10 +3025,10 @@ _print_synopsis() {
 ##     "sed"
 ##   ],
 ##   "depends": [
-##     "_sed_i",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info",
-##     "_echo_warning"
+##     "_echo_warning",
+##     "_sed_i"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3065,16 +3060,16 @@ _set_parameter() {
     #   KEY:       The variable name to set to provided file
     #   VALUE:     The value to be set to provided file
 
-    if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then _echo_danger 'error: _set_parameter: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 3 ]; then _echo_danger "error: _set_parameter: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then _echo_error '_set_parameter: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 3 ]; then _echo_error "_set_parameter: too many arguments ($#)\n"; return 1; fi
 
     # set default values
     set -- "$(realpath "$1")" "$2" "$3"
 
-    if [ ! -f "$1" ]; then _echo_danger "error: _set_parameter: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_set_parameter: \"$1\" file not found\n"; return 1; fi
 
     if [ -z "$(_get_parameter "$1")" ]; then
-        _echo_danger "error: _set_parameter: \"$1\" parameter not found\n"
+        _echo_error "_set_parameter: \"$1\" parameter not found\n"
 
         return 1
     fi
@@ -3101,7 +3096,7 @@ _set_parameter() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3125,11 +3120,11 @@ _get_function_shoedoc() {
     #   SCRIPT_PATH:   The path to the input file.
     #   FUNCTION_NAME: The name of the function to retrieve.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _get_function_shoedoc: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_function_shoedoc: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_get_function_shoedoc: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_function_shoedoc: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_function_shoedoc: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_function_shoedoc: \"$1\" file not found\n"; return 1; fi
 
     awk -v FUNCTION_NAME="$2" '
         /^##/ { annotation=annotation$0"\n" }                   # concatenates annotations
@@ -3151,7 +3146,7 @@ _get_function_shoedoc() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3167,11 +3162,11 @@ _get_script_shoedoc() {
     # Synopsis: _get_script_shoedoc <SCRIPT_PATH>
     #   SCRIPT_PATH: The path to the input script.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_script_shoedoc: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_script_shoedoc: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_script_shoedoc: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_script_shoedoc: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")"
-    if [ ! -f "$1" ]; then _echo_danger "error: _get_script_shoedoc: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_get_script_shoedoc: \"$1\" file not found\n"; return 1; fi
 
     awk '
         /^##/ { annotation=annotation$0"\n" }
@@ -3194,7 +3189,7 @@ _get_script_shoedoc() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3212,8 +3207,8 @@ _get_shoedoc() {
     #   note: Remove every line that does not start with a pound character or contains a tag
     #         Returns string without leading pound characters
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_shoedoc: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_shoedoc: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_shoedoc: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_shoedoc: too many arguments ($#)\n"; return 1; fi
 
     printf '%s' "$1" | awk '/^## .*/ {
         if (substr($2,1,1) != "@") {
@@ -3231,7 +3226,7 @@ _get_shoedoc() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3247,8 +3242,8 @@ _get_shoedoc_description() {
     # Synopsis: _get_shoedoc_description <TEXT>
     #   TEXT: The input shoedoc annotation bloc.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_shoedoc_description: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_shoedoc_description: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_shoedoc_description: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_shoedoc_description: too many arguments ($#)\n"; return 1; fi
 
     printf '%s' "$1" | awk '/^## .*/ {
         if (substr($2,1,1) != "@") {
@@ -3269,7 +3264,7 @@ _get_shoedoc_description() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3293,8 +3288,8 @@ _get_shoedoc_tag() {
     #   TEXT:     The input shoedoc annotation bloc.
     #   TAG_NAME: The name of tag to return.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _get_shoedoc_tag: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _get_shoedoc_tag: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_get_shoedoc_tag: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_get_shoedoc_tag: too many arguments ($#)\n"; return 1; fi
 
     printf '%s' "$1" | awk -v TAG="$2" '/^## .*/ {
         if ($2=="@"TAG) {
@@ -3313,7 +3308,7 @@ _get_shoedoc_tag() {
 ##     "awk"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3330,8 +3325,8 @@ _get_shoedoc_title() {
     #   TEXT: The input shoedoc annotation bloc.
     #   note: Returns the first line that does not contain a tag
 
-    if [ -z "$1" ]; then _echo_danger 'error: _get_shoedoc_title: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _get_shoedoc_title: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_get_shoedoc_title: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_get_shoedoc_title: too many arguments ($#)\n"; return 1; fi
 
     printf '%s' "$1" | awk '/^## .*/ {
         if (substr($2,1,1) != "@") {
@@ -3350,7 +3345,7 @@ _get_shoedoc_title() {
 ##     "sed"
 ##   ],
 ##   "depends": [
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_get_function_shoedoc"
 ##   ],
 ##   "parameters": [
@@ -3375,11 +3370,11 @@ _parse_shoedoc() {
     #   SCRIPT_PATH:   The path to the input file.
     #   FUNCTION_NAME: The name of the function to retrieve.
 
-    if [ -z "$1" ] || [ -z "$2" ]; then _echo_danger 'error: _parse_shoedoc: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _parse_shoedoc: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_parse_shoedoc: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_parse_shoedoc: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(realpath "$1")" "$2"
-    if [ ! -f "$1" ]; then _echo_danger "error: _parse_shoedoc: \"$1\" file not found\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_parse_shoedoc: \"$1\" file not found\n"; return 1; fi
 
     set -- "$1" "$2" "$(printf '%s' "$(_get_function_shoedoc "$1" "$2" | sed -nE 's/^ *#+ *//p')")"
     set -- "$1" "$2" "$3" "$(printf '%s' "$3" | sed -n '/^{/,$p')" "$(printf '%s' "$3" | head -n 1)"
@@ -3418,7 +3413,7 @@ _parse_shoedoc() {
 ##   "namespace": "strings",
 ##   "depends": [
 ##     "_sed_i",
-##     "_echo_danger",
+##     "_echo_error",
 ##     "_echo_info"
 ##   ],
 ##   "parameters": [
@@ -3435,9 +3430,9 @@ _collapse_blank_lines() {
     # Synopsis: _collapse_blank_lines <FILE_PATH>
     #   FILE_PATH: The path to the input file.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _collapse_blank_lines: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _collapse_blank_lines: too many arguments ($#)\n"; return 1; fi
-    if [ ! -f "$1" ]; then _echo_danger "error: _collapse_blank_lines: \"$1\" file not found\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_collapse_blank_lines: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_collapse_blank_lines: too many arguments ($#)\n"; return 1; fi
+    if [ ! -f "$1" ]; then _echo_error "_collapse_blank_lines: \"$1\" file not found\n"; return 1; fi
     set -- "$(realpath "$1")"
 
     # The N command reads the next line into the pattern space.
@@ -3457,7 +3452,7 @@ _collapse_blank_lines() {
 ##   "depends": [
 ##     "_get_package_name",
 ##     "_is_installed",
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3473,8 +3468,8 @@ _check_installed() {
     # Synopsis: _check_installed <COMMAND>
     #   COMMAND: A string containing the command name to find.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _check_installed: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _check_installed: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_check_installed: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_check_installed: too many arguments ($#)\n"; return 1; fi
 
     if _is_installed "$1"; then
         return 0
@@ -3483,7 +3478,7 @@ _check_installed() {
     # set default values
     set -- "$1" "$(_get_package_name "$1")"
 
-    _echo_danger "error: \"$(basename "${0}")\" requires $1, try: 'sudo apt-get install -y $2'\n"
+    _echo_error "\"$(basename "${0}")\" requires $1, try: 'sudo apt-get install -y $2'\n"
 
     exit 1
 }
@@ -3496,7 +3491,7 @@ _check_installed() {
 ##     "dpkg"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3512,8 +3507,8 @@ _is_installed() {
     # Synopsis: _is_installed <COMMAND>
     #   COMMAND: A string containing the command name to find.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _is_installed: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _is_installed: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_is_installed: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_is_installed: too many arguments ($#)\n"; return 1; fi
 
     if [ -x "$(command -v "$1")" ]; then
 
@@ -3566,7 +3561,7 @@ _pwd() {
 ##     "sed"
 ##   ],
 ##   "depends": [
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3590,8 +3585,8 @@ _is_valid() {
     #   VALUE:   The string to be compared to regex pattern.
     #   PATTERN: The regex parttern to apply.
 
-    if [ $# -lt 2 ]; then _echo_danger 'error: _is_valid: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 2 ]; then _echo_danger "error: _is_valid: too many arguments ($#)\n"; return 1; fi
+    if [ $# -lt 2 ]; then _echo_error '_is_valid: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_is_valid: too many arguments ($#)\n"; return 1; fi
 
     # missing pattern always returns valid status
     if [ -z "$2" ]; then
@@ -3621,7 +3616,7 @@ _is_valid() {
 ##   "depends": [
 ##     "_get_constraint",
 ##     "_is_valid",
-##     "_echo_danger"
+##     "_echo_error"
 ##   ],
 ##   "parameters": [
 ##     {
@@ -3637,13 +3632,13 @@ _validate() {
     # Synopsis: _validate <VARIABLE>
     #   VARIABLE: The variable to validate in the followling format : variable_name=value.
 
-    if [ -z "$1" ]; then _echo_danger 'error: _validate: some mandatory parameter is missing\n'; return 1; fi
-    if [ $# -gt 1 ]; then _echo_danger "error: _validate: too many arguments ($#)\n"; return 1; fi
+    if [ -z "$1" ]; then _echo_error '_validate: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 1 ]; then _echo_error "_validate: too many arguments ($#)\n"; return 1; fi
 
     set -- "$(printf '%s' "$1" | cut -d= -f1)" "$(printf '%s' "$1" | cut -d= -f2)" "$(_get_constraint "$0" "$(printf '%s' "$1" | cut -d= -f1)")"
 
     if ! _is_valid "$2" "$3"; then
-        _echo_danger "error: invalid \"$1\", expected \"$3\", \"$2\" given\n"
+        _echo_error "invalid \"$1\", expected \"$3\", \"$2\" given\n"
         exit 1
     fi
 }
@@ -3664,11 +3659,11 @@ _validate() {
 ##     "_after",
 ##     "_before",
 ##     "_default",
+##     "_echo_error",
 ##     "_get_flags",
 ##     "_get_functions_names",
 ##     "_get_options",
-##     "_validate",
-##     "_echo_danger"
+##     "_validate"
 ##   ]
 ## }
 _kernel() {
@@ -3676,7 +3671,7 @@ _kernel() {
     __functions_names__=$(_get_functions_names "$0" true)
     for __function__ in ${__functions_names__}; do
         if [ "$(printf "%s" "${__functions_names__}" | grep -cx "${__function__}")" -gt 1 ]; then
-            _echo_danger "error: function \"${__function__}\" is defined multiple times\n"
+            _echo_error "function \"${__function__}\" is defined multiple times\n"
             exit 1
         fi
     done
@@ -3716,7 +3711,7 @@ _kernel() {
                 done
             done
             if [ "${__is_valid__}" = false ]; then
-                _echo_danger "error: \"${__argument__}\" is not a valid parameter\n"
+                _echo_error "\"${__argument__}\" is not a valid parameter\n"
                 exit 1
             fi
             continue
@@ -3732,13 +3727,13 @@ _kernel() {
             fi
         done
         if [ "${__is_valid__}" = false ]; then
-            _echo_danger "error: \"${__argument__}\" is not a valid command\n"
+            _echo_error "\"${__argument__}\" is not a valid command\n"
             exit 1
         fi
     done
 
     if [ -n "${__requires_value__}" ]; then
-        _echo_danger "error: \"--${__requires_value__}\" requires value\n"
+        _echo_error "\"--${__requires_value__}\" requires value\n"
         exit 1
     fi
 

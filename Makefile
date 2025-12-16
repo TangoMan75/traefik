@@ -2,7 +2,7 @@
 ##
 ## TangoMan Traefik: Streamline your Traefik setup with Docker.
 ##
-## @version 0.1.1
+## @version 0.2.1
 ## @author  "Matthias Morin" <mat@tangoman.io>
 ## @license MIT
 ## @link    https://github.com/TangoMan75/traefik

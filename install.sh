@@ -33,10 +33,13 @@ set -e
 ## Installation script
 ##
 ## @author  "Matthias Morin" <mat@tangoman.io>
-## @version 0.2.0
+## @version 0.2.1
 ## @license MIT
 ## @link    https://github.com/TangoMan75/traefik
 
+#--------------------------------------------------
+# Place your constants after this line
+#--------------------------------------------------
 
 ## The author of the repository.
 AUTHOR=TangoMan75
@@ -48,7 +51,7 @@ APP_NAME=traefik
 REPOSITORY="${AUTHOR}/${APP_NAME}"
 
 ## The version of the application to install.
-VERSION=0.2.0
+VERSION=0.2.1
 
 ## The download URL for the application.
 URL="https://github.com/${REPOSITORY}/archive/refs/tags/${VERSION}.zip"
@@ -59,46 +62,18 @@ TEMP_DIRECTORY=$(mktemp -d)
 ## The final installation directory for the application.
 INSTALL_DIRECTORY="${HOME}/.local/share/${REPOSITORY}"
 
+#--------------------------------------------------
+# Place your private functions after this line
+#--------------------------------------------------
 
 ## Print primary alert (bold white text over bright blue background)
 _alert_primary() { printf "\033[0m\n\033[1;104;97m%64s\033[0m\n\033[1;104;97m %-63s\033[0m\n\033[1;104;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print secondary alert (bold white text over bright purple background)
-_alert_secondary() { printf "\033[0m\n\033[1;45;97m%64s\033[0m\n\033[1;45;97m %-63s\033[0m\n\033[1;45;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print success alert (bold white text over bright green background)
-_alert_success() { printf "\033[0m\n\033[1;42;97m%64s\033[0m\n\033[1;42;97m %-63s\033[0m\n\033[1;42;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print danger alert (bold white text over bright red background)
-_alert_danger() { printf "\033[0m\n\033[1;41;97m%64s\033[0m\n\033[1;41;97m %-63s\033[0m\n\033[1;41;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print warning alert (bold white text over bright orange background)
-_alert_warning() { printf "\033[0m\n\033[1;43;97m%64s\033[0m\n\033[1;43;97m %-63s\033[0m\n\033[1;43;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print info alert (bold white text over blue background)
-_alert_info() { printf "\033[0m\n\033[1;44;97m%64s\033[0m\n\033[1;44;97m %-63s\033[0m\n\033[1;44;97m%64s\033[0m\n\n" '' "$1" ''; }
-
-## Print primary text (bright white text)
-_echo_primary() { printf '\033[97m%b\033[0m' "$1"; }
-
-## Print secondary text (bright blue text)
-_echo_secondary() { printf '\033[94m%b\033[0m' "$1"; }
-
-## Print success text (bright green text)
-_echo_success() { printf '\033[32m%b\033[0m' "$1"; }
-
-## Print danger text (red text)
-_echo_danger() { printf '\033[31m%b\033[0m' "$1"; }
-
-## Print warning text (orange text)
-_echo_warning() { printf '\033[33m%b\033[0m' "$1"; }
 
 ## Print info text (bright purple text)
 _echo_info() { printf '\033[95m%b\033[0m' "$1"; }
 
 ## Print error message to STDERR, prefixed with "error: "
 _echo_error() { printf '\033[31merror: %b\033[0m' "$1" >&2; }
-
 
 ## Extract file based on its extension
 ##
@@ -172,6 +147,56 @@ _extract() {
     _echo_error "Unsupported archive format \"${1##*.}\".\n"
 }
 
+## Move file or folder to destination (creates folder when missing)
+##
+## {
+##   "namespace": "files",
+##   "depends": [
+##     "_echo_error",
+##     "_echo_info"
+##   ],
+##   "parameters": [
+##     {
+##       "position": 1,
+##       "name": "PATH",
+##       "type": "path",
+##       "description": "The path to the input file or folder.",
+##       "nullable": false
+##     },
+##     {
+##       "position": 1,
+##       "name": "DESTINATION_FOLDER",
+##       "type": "folder",
+##       "description": "The path to the destination folder.",
+##       "nullable": false
+##     }
+##   ]
+## }
+_move() {
+    # Synopsis: _move <PATH> <DESTINATION_FOLDER>
+    #   FILE_PATH:          The path to the input file or folder.
+    #   DESTINATION_FOLDER: The path to the destination folder.
+
+    if [ -z "$1" ] || [ -z "$2" ]; then _echo_error '_move: some mandatory parameter is missing\n'; return 1; fi
+    if [ $# -gt 2 ]; then _echo_error "_move: too many arguments ($#)\n"; return 1; fi
+
+    set -- "$(realpath "$1")" "$2"
+    if [ ! -f "$1" ] && [ ! -d "$1" ]; then _echo_error "_move: \"$1\" no such file or directory\n"; return 1; fi
+    # create destination folder
+    if [ ! -d "$2" ]; then _echo_info "mkdir -p \"$2\"\n"; mkdir -p "$2"; fi
+
+    if [ -f "$1" ]; then
+        _echo_info "mv \"$1\" \"$2\"\n"
+        mv "$1" "$2"
+
+        return 0
+    fi
+
+    _echo_info "mv -T \"$1\" \"$2\"\n"
+    mv -T "$1" "$2"
+
+}
+
 ## Downloads file with either curl or wget
 ##
 ## {
@@ -185,7 +210,6 @@ _extract() {
 ##   "depends": [
 ##     "_echo_error",
 ##     "_echo_info",
-##     "_echo_warning",
 ##     "_is_installed"
 ##   ],
 ##   "parameters": [
@@ -325,6 +349,9 @@ _is_installed() {
     return 1
 }
 
+#--------------------------------------------------
+# Place your functions after this line
+#--------------------------------------------------
 
 ## Run installation script
 ##
@@ -334,7 +361,8 @@ _is_installed() {
 ##     "_alert_primary",
 ##     "_download",
 ##     "_echo_info",
-##     "_extract"
+##     "_extract",
+##     "_move"
 ##   ],
 ##   "assumes": [
 ##     "APP_NAME",
@@ -350,12 +378,7 @@ install() {
 
     _download "${URL}" "${TEMP_DIRECTORY}/${VERSION}.zip"
     _extract "${TEMP_DIRECTORY}/${VERSION}.zip"
-
-    _echo_info "mkdir -p \"${INSTALL_DIRECTORY}\"\n"
-    mkdir -p "${INSTALL_DIRECTORY}"
-
-    _echo_info "mv \"${TEMP_DIRECTORY}/${APP_NAME}-${VERSION}\"/* \"${INSTALL_DIRECTORY}\"/\n"
-    mv "${TEMP_DIRECTORY}/${APP_NAME}-${VERSION}"/* "${INSTALL_DIRECTORY}"/
+    _move "${TEMP_DIRECTORY}/${APP_NAME}-${VERSION}/" "${INSTALL_DIRECTORY}/"
 
     _echo_info "rm -rf \"${TEMP_DIRECTORY}\"\n"
     rm -rf "${TEMP_DIRECTORY}"
