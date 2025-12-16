@@ -1,211 +1,257 @@
-#/**
-# * TangoMan Traefik
-# *
-# * @version  0.1.0
-# * @author   "Matthias Morin" <mat@tangoman.io>
-# * @license  MIT
-# */
+## TangoMan Traefik
+##
+## TangoMan Traefik: Streamline your Traefik setup with Docker.
+##
+## @version 0.1.1
+## @author  "Matthias Morin" <mat@tangoman.io>
+## @license MIT
+## @link    https://github.com/TangoMan75/traefik
 
-.PHONY: acme build clear help logs network open restart shell start status stop up
+.PHONY: help up set_env requirements uninstall logs clear backup restore open password letsencrypt acme email certs add_domain print_domains remove_certs build start stop network remove_network lint lint_yaml lint_shell self_install self_uninstall
 
-#--------------------------------------------------
-# Parameters
-#--------------------------------------------------
+##################################################
+## Colors
+##################################################
 
-# App environment (dev|prod)
-env?=dev
+_PRIMARY   = \033[97m
+_SECONDARY = \033[94m
+_SUCCESS   = \033[32m
+_DANGER    = \033[31m
+_WARNING   = \033[33m
+_INFO      = \033[95m
+_DEFAULT   = \033[0m
+_EOL       = \033[0m\n
 
-#--------------------------------------------------
-# Colors
-#--------------------------------------------------
+_ALERT_PRIMARY   = \033[1;104;97m
+_ALERT_SECONDARY = \033[1;45;97m
+_ALERT_SUCCESS   = \033[1;42;97m
+_ALERT_DANGER    = \033[1;41;97m
+_ALERT_WARNING   = \033[1;43;97m
+_ALERT_INFO      = \033[1;44;97m
 
-PRIMARY   = \033[97m
-SECONDARY = \033[94m
-SUCCESS   = \033[32m
-DANGER    = \033[31m
-WARNING   = \033[33m
-INFO      = \033[95m
-LIGHT     = \033[47;90m
-DARK      = \033[40;37m
-DEFAULT   = \033[0m
-EOL       = \033[0m\n
+##################################################
+## Color Functions
+##################################################
 
-ALERT_PRIMARY   = \033[1;104;97m
-ALERT_SECONDARY = \033[1;45;97m
-ALERT_SUCCESS   = \033[1;42;97m
-ALERT_DANGER    = \033[1;41;97m
-ALERT_WARNING   = \033[1;43;97m
-ALERT_INFO      = \033[1;44;97m
-ALERT_LIGHT     = \033[1;47;90m
-ALERT_DARK      = \033[1;40;37m
-
-#--------------------------------------------------
-# Color Functions
-#--------------------------------------------------
-
-define echo_primary
-	@printf "${PRIMARY}%b${EOL}" $(1)
+define _echo_primary
+	@printf "${_PRIMARY}%b${_EOL}" $(1)
 endef
-define echo_secondary
-	@printf "${SECONDARY}%b${EOL}" $(1)
+define _echo_secondary
+	@printf "${_SECONDARY}%b${_EOL}" $(1)
 endef
-define echo_success
-	@printf "${SUCCESS}%b${EOL}" $(1)
+define _echo_success
+	@printf "${_SUCCESS}%b${_EOL}" $(1)
 endef
-define echo_danger
-	@printf "${DANGER}%b${EOL}" $(1)
+define _echo_danger
+	@printf "${_DANGER}%b${_EOL}" $(1)
 endef
-define echo_warning
-	@printf "${WARNING}%b${EOL}" $(1)
+define _echo_warning
+	@printf "${_WARNING}%b${_EOL}" $(1)
 endef
-define echo_info
-	@printf "${INFO}%b${EOL}" $(1)
-endef
-define echo_light
-	@printf "${LIGHT}%b${EOL}" $(1)
-endef
-define echo_dark
-	@printf "${DARK}%b${EOL}" $(1)
+define _echo_info
+	@printf "${_INFO}%b${_EOL}" $(1)
 endef
 
-define echo_label
-	@printf "${SUCCESS}%b ${DEFAULT}" $(1)
+define _alert_primary
+	@printf "${_EOL}${_ALERT_PRIMARY}%64s${_EOL}${_ALERT_PRIMARY} %-63s${_EOL}${_ALERT_PRIMARY}%64s${_EOL}\n" "" $(1) ""
 endef
-define echo_error
-	@printf "${DANGER}error: %b${EOL}" $(1)
+define _alert_secondary
+	@printf "${_EOL}${_ALERT_SECONDARY}%64s${_EOL}${_ALERT_SECONDARY} %-63s${_EOL}${_ALERT_SECONDARY}%64s${_EOL}\n" "" $(1) ""
 endef
-
-define alert_primary
-	@printf "${EOL}${ALERT_PRIMARY}%64s${EOL}${ALERT_PRIMARY} %-63s${EOL}${ALERT_PRIMARY}%64s${EOL}\n" "" $(1) ""
+define _alert_success
+	@printf "${_EOL}${_ALERT_SUCCESS}%64s${_EOL}${_ALERT_SUCCESS} %-63s${_EOL}${_ALERT_SUCCESS}%64s${_EOL}\n" "" $(1) ""
 endef
-define alert_secondary
-	@printf "${EOL}${ALERT_SECONDARY}%64s${EOL}${ALERT_SECONDARY} %-63s${EOL}${ALERT_SECONDARY}%64s${EOL}\n" "" $(1) ""
+define _alert_danger
+	@printf "${_EOL}${_ALERT_DANGER}%64s${_EOL}${_ALERT_DANGER} %-63s${_EOL}${_ALERT_DANGER}%64s${_EOL}\n" "" $(1) ""
 endef
-define alert_success
-	@printf "${EOL}${ALERT_SUCCESS}%64s${EOL}${ALERT_SUCCESS} %-63s${EOL}${ALERT_SUCCESS}%64s${EOL}\n" "" $(1) ""
+define _alert_warning
+	@printf "${_EOL}${_ALERT_WARNING}%64s${_EOL}${_ALERT_WARNING} %-63s${_EOL}${_ALERT_WARNING}%64s${_EOL}\n" "" $(1) ""
 endef
-define alert_danger
-	@printf "${EOL}${ALERT_DANGER}%64s${EOL}${ALERT_DANGER} %-63s${EOL}${ALERT_DANGER}%64s${EOL}\n" "" $(1) ""
-endef
-define alert_warning
-	@printf "${EOL}${ALERT_WARNING}%64s${EOL}${ALERT_WARNING} %-63s${EOL}${ALERT_WARNING}%64s${EOL}\n" "" $(1) ""
-endef
-define alert_info
-	@printf "${EOL}${ALERT_INFO}%64s${EOL}${ALERT_INFO} %-63s${EOL}${ALERT_INFO}%64s${EOL}\n" "" $(1) ""
-endef
-define alert_light
-	@printf "${EOL}${ALERT_LIGHT}%64s${EOL}${ALERT_LIGHT} %-63s${EOL}${ALERT_LIGHT}%64s${EOL}\n" "" $(1) ""
-endef
-define alert_dark
-	@printf "${EOL}${ALERT_DARK}%64s${EOL}${ALERT_DARK} %-63s${EOL}${ALERT_DARK}%64s${EOL}\n" "" $(1) ""
+define _alert_info
+	@printf "${_EOL}${_ALERT_INFO}%64s${_EOL}${_ALERT_INFO} %-63s${_EOL}${_ALERT_INFO}%64s${_EOL}\n" "" $(1) ""
 endef
 
-#--------------------------------------------------
-# Help
-#--------------------------------------------------
+##################################################
+## Help
+##################################################
 
 ## Print this help
 help:
-	$(call alert_primary, 'TangoMan Traefik')
+	$(call _alert_primary, "TangoMan Traefik")
 
-	$(call echo_warning, 'Description')
-	$(call echo_primary, "  Awesome **TangoMan Traefik Boilerplate** is a fast and handy tool to manage Traefik with Docker.${EOL}")
+	@printf "${_WARNING}Description:${_EOL}"
+	@printf "${_PRIMARY}  TangoMan Traefik: Streamline your Traefik setup with Docker. ${_EOL}\n"
 
-	$(call echo_warning, 'Usage')
-	@printf "${PRIMARY}  make [command] `awk -F '?' '/^[ \t]+?[a-zA-Z0-9_-]+[ \t]+?\?=/{gsub(/[ \t]+/,"");printf"%s=[%s]\n",$$1,$$1}' ${MAKEFILE_LIST}|sort|uniq|tr '\n' ' '`${EOL}\n"
+	@printf "${_WARNING}Usage:${_EOL}"
+	@printf "${_PRIMARY}  make [command]${_EOL}\n"
 
-	$(call echo_warning, 'Commands')
-	@awk '/^### /{printf"\n${WARNING}%s${EOL}",substr($$0,5)} \
-	/^[a-zA-Z0-9_-]+:/{HELP="";if(match(PREV,/^## /))HELP=substr(PREV, 4); \
-		printf "  ${SUCCESS}%-16s${DEFAULT} ${PRIMARY}%s${EOL}",substr($$1,0,index($$1,":")-1),HELP \
+	@printf "${_WARNING}Commands:${_EOL}"
+	@awk '/^### /{printf"\n${_WARNING}%s${_EOL}",substr($$0,5)} \
+	/^[a-zA-Z0-9_-]+:/{HELP="";if( match(PREV,/^## /))HELP=substr(PREV,4); \
+		printf "${_SUCCESS}  %-12s  ${_PRIMARY}%s${_EOL}",substr($$1,0,index($$1,":")-1),HELP \
 	}{PREV=$$0}' ${MAKEFILE_LIST}
 
-##############################################
+##################################################
 ### Install
-##############################################
+##################################################
 
 ## Build and start traefik
 up:
-	@sh entrypoint.sh up --env "${env}"
+	@printf "${_INFO}sh traefik.sh up${_EOL}"
+	@sh traefik.sh up
 
-## Install TangoMan Traefik companion
-install:
-	@sh entrypoint.sh self_install
+## Set dev or prod configuration
+set_env:
+	@printf "${_INFO}sh traefik.sh set_env${_EOL}"
+	@sh traefik.sh set_env
 
-## Uninstall traefik
+## Check requirements
+requirements:
+	@printf "${_INFO}sh traefik.sh requirements${_EOL}"
+	@sh traefik.sh requirements
+
+## Uninstall Traefik
 uninstall:
-	@sh entrypoint.sh uninstall
-	@sh entrypoint.sh self_uninstall
+	@printf "${_INFO}sh traefik.sh uninstall${_EOL}"
+	@sh traefik.sh uninstall
 
-##############################################
+##################################################
 ### App
-##############################################
+##################################################
 
-## Show logs
+## Show traefik error log
 logs:
-	@sh entrypoint.sh logs
+	@printf "${_INFO}sh traefik.sh logs${_EOL}"
+	@sh traefik.sh logs
 
 ## Clear logs
 clear:
-	@sh entrypoint.sh clear
+	@printf "${_INFO}sh traefik.sh clear${_EOL}"
+	@sh traefik.sh clear
 
-##############################################
-### Local
-##############################################
+## Backup traefik configuration
+backup:
+	@printf "${_INFO}sh traefik.sh backup${_EOL}"
+	@sh traefik.sh backup
 
-## Open traefik dashboard in default browser
+## Restore traefik configuration
+restore:
+	@printf "${_INFO}sh traefik.sh restore${_EOL}"
+	@sh traefik.sh restore
+
+## Open all configured domains in default browser
 open:
-	@sh entrypoint.sh open
+	@printf "${_INFO}sh traefik.sh open${_EOL}"
+	@sh traefik.sh open
 
-##############################################
-### Security
-##############################################
-
-## Generate password
+## Set traefik dashboard password
 password:
-	@sh entrypoint.sh password --env "${env}"
-
-##################################################
-### Container
-##################################################
-
-## Build docker stack
-build:
-	@sh entrypoint.sh build
-
-## Start docker stack
-start:
-	@sh entrypoint.sh start
-
-## Stop docker stack
-stop:
-	@sh entrypoint.sh stop
-
-##################################################
-### Network
-##################################################
-
-## Create network
-network:
-	@sh entrypoint.sh network
-
-## Remove network
-remove-network:
-	@sh entrypoint.sh remove_network
+	@printf "${_INFO}sh traefik.sh password${_EOL}"
+	@sh traefik.sh password
 
 ##################################################
 ### Let's Encrypt
 ##################################################
 
-## Create acme.json file
+## Config Let's Encrypt
+letsencrypt:
+	@printf "${_INFO}sh traefik.sh letsencrypt${_EOL}"
+	@sh traefik.sh letsencrypt
+
+## Create empty Let's Encrypt acme.json file
 acme:
-	@sh entrypoint.sh acme
+	@printf "${_INFO}sh traefik.sh acme${_EOL}"
+	@sh traefik.sh acme
+
+## Set Let's Encrypt email
+email:
+	@printf "${_INFO}sh traefik.sh email${_EOL}"
+	@sh traefik.sh email
 
 ##################################################
-### CI/CD
+### Certificates
 ##################################################
 
-## Lint project files
+## Install local SSL certificates
+certs:
+	@printf "${_INFO}sh traefik.sh certs${_EOL}"
+	@sh traefik.sh certs
+
+## Add a new domain to current local certificates
+add_domain:
+	@printf "${_INFO}sh traefik.sh add_domain${_EOL}"
+	@sh traefik.sh add_domain
+
+## Print configured domains
+print_domains:
+	@printf "${_INFO}sh traefik.sh print_domains${_EOL}"
+	@sh traefik.sh print_domains
+
+## Remove local SSL certificates
+remove_certs:
+	@printf "${_INFO}sh traefik.sh remove_certs${_EOL}"
+	@sh traefik.sh remove_certs
+
+##################################################
+### Docker
+##################################################
+
+## Build docker stack
+build:
+	@printf "${_INFO}sh traefik.sh build${_EOL}"
+	@sh traefik.sh build
+
+## Start docker stack
+start:
+	@printf "${_INFO}sh traefik.sh start${_EOL}"
+	@sh traefik.sh start
+
+## Stop docker stack
+stop:
+	@printf "${_INFO}sh traefik.sh stop${_EOL}"
+	@sh traefik.sh stop
+
+## Create network
+network:
+	@printf "${_INFO}sh traefik.sh network${_EOL}"
+	@sh traefik.sh network
+
+## Remove network
+remove_network:
+	@printf "${_INFO}sh traefik.sh remove_network${_EOL}"
+	@sh traefik.sh remove_network
+
+##################################################
+### CI
+##################################################
+
+## Sniff errors with linters
 lint:
-	@sh entrypoint.sh lint
+	@printf "${_INFO}sh traefik.sh lint${_EOL}"
+	@sh traefik.sh lint
+
+## Sniff errors with yamllint
+lint_yaml:
+	@printf "${_INFO}sh traefik.sh lint_yaml${_EOL}"
+	@sh traefik.sh lint_yaml
+
+## Sniff errors with shellcheck
+lint_shell:
+	@printf "${_INFO}sh traefik.sh lint_shell${_EOL}"
+	@sh traefik.sh lint_shell
+
+##################################################
+### Self Install
+##################################################
+
+## Install traefik companion and enable autocompletion
+self_install:
+	@printf "${_INFO}sh traefik.sh self_install${_EOL}"
+	@sh traefik.sh self_install
+
+## Uninstall traefik companion from system
+self_uninstall:
+	@printf "${_INFO}sh traefik.sh self_uninstall${_EOL}"
+	@sh traefik.sh self_uninstall
+
 

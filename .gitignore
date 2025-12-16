@@ -7,5 +7,4 @@
 !/config/dynamic/.gitignore
 /config/traefik.yaml
 /logs/*
-traefik.md
 traefik-completion.sh

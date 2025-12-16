@@ -2,6 +2,7 @@
 [![GH release](https://img.shields.io/github/v/release/TangoMan75/traefik)](https://github.com/TangoMan75/traefik/releases)
 ![GH license](https://img.shields.io/github/license/TangoMan75/traefik)
 ![GH stars](https://img.shields.io/github/stars/TangoMan75/traefik)
+![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FTangoMan75%2Ftraefik&labelColor=%23697689&countColor=%2337d67a&style=flat)
 
 ![YamlLint CI](https://github.com/TangoMan75/traefik/workflows/YamlLint%20CI/badge.svg)
 ![ShellCheck CI](https://github.com/TangoMan75/traefik/workflows/ShellCheck%20CI/badge.svg)
@@ -25,36 +26,54 @@ Local Traefik api endpoint will be available here: [http://traefik.localhost/api
 
 - Docker `compose.yaml` configuration for `dev` and `prod` environments
 - Makefile
-- `entrypoint.sh` script
+- `traefik.sh` script
 
 🚀 Installation
 ---------------
 
-### 1. Enter following command in your terminal
+### 1. Automated install
+
+Run this command in your terminal:
+
+```bash
+curl -sS https://raw.githubusercontent.com/TangoMan75/traefik/master/install.sh | sh
+```
+
+### 2. Manual install
+
+Clone the repository:
+
+```bash
+git clone https://github.com/TangoMan75/traefik.git
+cd traefik
+```
+
+Install Traefik Companion Globally (optional):
+
+```bash
+./traefik.sh self_install
+```
+
+Run the setup:
 
 ```bash
 # build and run with `dev` settings
 make up
+# or
+traefik up
 
 # build and run with `prod` configuration
 make up env=prod
+# or
+traefik up --env prod
 ```
 
-### 2. Choose username
+After running the setup, you will be prompted to:
 
-> Choose dashboard username (eg: root):
-
-### 3. Choose password
-
-> Choose dashboard password (eg: toor):
-
-### 4. Enter let's encrypt email
-
-> Enter let's encrypt email (eg: admin@yopmail.com):
-
-### 5. Enter traefik network name
-
-> Enter traefik network name : [traefik]
+1.  **Choose username:** for the Traefik dashboard.
+2.  **Choose password:** for the Traefik dashboard.
+3.  **Enter Let's Encrypt email:** for SSL certificate generation (in `prod` environment).
+4.  **Enter Traefik network name:** (defaults to `traefik`).
 
 💻 Dependencies
 ---------------
@@ -68,23 +87,41 @@ make up env=prod
 - Make (optional) : `sudo apt-get install --assume-yes make`
 - mkcert (dev) : https://github.com/FiloSottile/mkcert
 - yamllint (dev) : https://yamllint.readthedocs.io
+- shellcheck (dev) : `sudo apt-get install --assume-yes shellcheck`
 
 🔥 Usage
 --------
 
-🤖 Make
--------
+Run `traefik` to see all available commands.
 
-Run `make` to print help
+|         Command          |                     Description                     |
+|--------------------------|-----------------------------------------------------|
+| `traefik up`             | Build and start Traefik                             |
+| `traefik start`          | Start Traefik docker stack                          |
+| `traefik stop`           | Stop Traefik docker stack                           |
+| `traefik logs`           | Show Traefik error logs                             |
+| `traefik clear`          | Clear logs                                          |
+| `traefik open`           | Open all configured domains in default browser      |
+| `traefik uninstall`      | Uninstall Traefik                                   |
+| `traefik password`       | Set Traefik dashboard password                      |
+| `traefik backup`         | Backup Traefik configuration                        |
+| `traefik restore`        | Restore Traefik configuration                       |
+| `traefik certs`          | Install local SSL certificates                      |
+| `traefik add_domain`     | Add a new domain to current local certificates      |
+| `traefik print_domains`  | Print configured domains                            |
+| `traefik remove_certs`   | Remove local SSL certificates                       |
+| `traefik letsencrypt`    | Configure Let's Encrypt                             |
+| `traefik acme`           | Create empty Let's Encrypt `acme.json` file         |
+| `traefik email`          | Set Let's Encrypt email                             |
+| `traefik network`        | Create Traefik network                              |
+| `traefik remove_network` | Remove Traefik network                              |
+| `traefik lint`           | Run all linters (shellcheck + yamllint)             |
+| `traefik lint_shell`     | Lint shell scripts with shellcheck                  |
+| `traefik lint_yaml`      | Lint YAML files with yamllint                       |
+| `traefik self_install`   | Install Traefik companion and enable autocompletion |
+| `traefik self_uninstall` | Uninstall Traefik companion from system             |
 
-```bash
-make [command]
-```
-
-🤖 entrypoint
--------------
-
-[See entrypoint.sh documentation](entrypoint.md)
+For more detailed usage, refer to the [traefik.sh documentation](traefik.md).
 
 🐞 Troubleshoot
 ---------------
@@ -97,7 +134,7 @@ If you encounter issues, try these steps:
 If you see this error:
 
 ```
-2025-07-22T15:51:07Z ERR Error while starting server error="accept tcp [::]:443: use of closed network connection" entryPointName=websecure
+2025-12-14T12:00:00Z ERR Error while starting server error="accept tcp [::]:443: use of closed network connection" entryPointName=websecure
 ```
 
 🚫 Traefik failed to start on port 443 (HTTPS) for the `websecure` entry point.
@@ -137,8 +174,8 @@ If you like **TangoMan Traefik** please star, follow or tweet:
 🙏 Acknowledgements
 -------------------
 
-* [shellcheck](https://github.com/koalaman/shellcheck): a static analysis tool for shell scripts (used for CI/CD)
-* [yamllint](https://github.com/adrienverge/yamllint): a static analysis tool for yaml files (used for CI/CD)
+- [shellcheck](https://github.com/koalaman/shellcheck): a static analysis tool for shell scripts (used for CI/CD)
+- [yamllint](https://github.com/adrienverge/yamllint): a static analysis tool for yaml files (used for CI/CD)
 
 Script created with [shoe](https://github.com/TangoMan75/shoe)
 
