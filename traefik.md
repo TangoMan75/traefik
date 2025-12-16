@@ -4,7 +4,7 @@ TangoMan Traefik
 ## ℹ️ Infos
 
 - author:  "Matthias Morin" <mat@tangoman.io>
-- version: 0.1.1
+- version: 0.2.1
 - link:    https://github.com/TangoMan75/traefik
 
 
@@ -142,7 +142,7 @@ Open all configured domains in default browser
 > open
 
 - ⚠️ Requires: `nohup`
-- 🔗 Depends: `_echo_danger`, `_echo_info`, `_open`
+- 🔗 Depends: `_echo_info`, `_open`
 
 #### ⌨️ 6. `password` (public)
 
@@ -183,7 +183,7 @@ Set Let's Encrypt email
 > email
 
 - ⚠️ Requires: `read`, `yq`
-- 🔗 Depends: `_echo_danger`, `_echo_info`, `_echo_success`, `_get_parameter`, `requirements`
+- 🔗 Depends: `_echo_info`, `_echo_success`, `_get_parameter`, `requirements`
 
 ### ⚡ CERTIFICATES
 
@@ -195,7 +195,7 @@ Install local SSL certificates
 > certs
 
 - ⚠️ Requires: `mkcert`, `yq`
-- 🔗 Depends: `_check_installed`, `_echo_danger`, `_echo_info`, `_get_parameter`, `print_domains`
+- 🔗 Depends: `_check_installed`, `_echo_error`, `_echo_info`, `_get_parameter`, `print_domains`
 
 #### ⌨️ 2. `add_domain` (public)
 
@@ -205,7 +205,7 @@ Add a new domain to current local certificates
 > add_domain
 
 - ⚠️ Requires: `read`
-- 🔗 Depends: `_echo_danger`, `_get_parameter`, `_set_parameter`, `certs`, `print_domains`
+- 🔗 Depends: `_echo_error`, `_get_parameter`, `_set_parameter`, `certs`, `print_domains`
 
 #### ⌨️ 3. `print_domains` (public)
 
