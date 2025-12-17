@@ -17,4 +17,4 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Sniff errors with shellcheck
-        run: ./entrypoint.sh lint_shell
+        run: make lint_shell
